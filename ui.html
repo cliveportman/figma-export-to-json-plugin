@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+      background: #fff;
+      color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .header svg { flex-shrink: 0; }
+    .header-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    /* ---- Export button ---- */
+    .action-row {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    button {
+      height: 32px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      transition: background 0.1s, opacity 0.1s;
+    }
+    button:disabled { opacity: 0.4; cursor: default; }
+
+    #exportBtn {
+      background: #18a0fb;
+      color: #fff;
+      flex: 1;
+    }
+    #exportBtn:hover:not(:disabled) { background: #0d8de3; }
+
+    #copyBtn, #downloadBtn {
+      background: #f0f0f0;
+      color: #1a1a1a;
+    }
+    #copyBtn:hover:not(:disabled), #downloadBtn:hover:not(:disabled) { background: #e0e0e0; }
+
+    /* ---- Status ---- */
+    #status {
+      padding: 6px 16px;
+      font-size: 11px;
+      min-height: 24px;
+      flex-shrink: 0;
+    }
+    #status.info  { color: #666; }
+    #status.error { color: #e03; }
+    #status.ok    { color: #0a0; }
+
+    /* ---- Node tag ---- */
+    #nodeTag {
+      display: none;
+      padding: 0 16px 6px;
+      flex-shrink: 0;
+    }
+    #nodeTag span {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #f0f0f0;
+      color: #555;
+    }
+    #nodeTag span.FRAME        { background: #e6f0ff; color: #1a56db; }
+    #nodeTag span.COMPONENT    { background: #f3e8ff; color: #7928ca; }
+    #nodeTag span.COMPONENT_SET{ background: #f3e8ff; color: #7928ca; }
+    #nodeTag span.INSTANCE     { background: #fff0e6; color: #b45309; }
+    #nodeTag span.GROUP        { background: #f0f9f0; color: #166534; }
+
+    /* ---- JSON output ---- */
+    #outputWrap {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #outputLabel {
+      padding: 4px 16px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      flex-shrink: 0;
+    }
+    #output {
+      flex: 1;
+      margin: 0 10px 10px;
+      padding: 10px;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      background: #fafafa;
+      font-family: "Menlo", "Monaco", "Courier New", monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #1a1a1a;
+      resize: none;
+      outline: none;
+      overflow: auto;
+      white-space: pre;
+      tab-size: 2;
+    }
+    #output:empty::before {
+      content: "Export result will appear here.";
+      color: #aaa;
+      font-style: italic;
+    }
+
+    /* ---- Copy flash ---- */
+    .flash { animation: flash 0.6s ease; }
+    @keyframes flash {
+      0%   { background: #d1fae5; }
+      100% { background: #fafafa; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect width="16" height="16" rx="3" fill="#18a0fb"/>
+    <path d="M4 11.5L8 4.5L12 11.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M5.5 9H10.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+  <span class="header-title">Export to JSON</span>
+</div>
+
+<div class="action-row">
+  <button id="exportBtn">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Export selection
+  </button>
+  <button id="copyBtn" disabled title="Copy JSON">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="4" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M2 9.5V2.5A1 1 0 013 1.5h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+    Copy
+  </button>
+  <button id="downloadBtn" disabled title="Download .json file">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M7 1v7M4.5 5.5L7 8l2.5-2.5M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Save
+  </button>
+</div>
+
+<div id="status" class="info">Select a frame or component in Figma, then click Export.</div>
+<div id="nodeTag"></div>
+<div id="outputWrap">
+  <div id="outputLabel">JSON</div>
+  <div id="output" contenteditable="true" spellcheck="false"></div>
+</div>
+
+<script>
+  const exportBtn   = document.getElementById("exportBtn");
+  const copyBtn     = document.getElementById("copyBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const statusEl    = document.getElementById("status");
+  const nodeTagEl   = document.getElementById("nodeTag");
+  const outputEl    = document.getElementById("output");
+
+  let currentJson = "";
+  let currentName = "";
+
+  function setStatus(text, type = "info") {
+    statusEl.textContent = text;
+    statusEl.className = type;
+  }
+
+  function setNodeTag(name, type) {
+    nodeTagEl.innerHTML = `<span class="${type}">${type}</span>&nbsp;<strong>${escapeHtml(name)}</strong>`;
+    nodeTagEl.style.display = "block";
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  exportBtn.addEventListener("click", () => {
+    exportBtn.disabled = true;
+    setStatus("Exporting…", "info");
+    parent.postMessage({ pluginMessage: { type: "export" } }, "*");
+  });
+
+  copyBtn.addEventListener("click", () => {
+    if (!currentJson) return;
+    var ta = document.createElement("textarea");
+    ta.value = currentJson;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    setStatus("Copied to clipboard!", "ok");
+    outputEl.classList.add("flash");
+    setTimeout(() => outputEl.classList.remove("flash"), 650);
+  });
+
+  downloadBtn.addEventListener("click", () => {
+    if (!currentJson) return;
+    const blob = new Blob([currentJson], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = (currentName || "export").replace(/[^a-z0-9_\-\s]/gi, "_") + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus("File downloaded.", "ok");
+  });
+
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (!msg) return;
+    exportBtn.disabled = false;
+
+    if (msg.type === "error") {
+      setStatus(msg.message, "error");
+      return;
+    }
+
+    if (msg.type === "result") {
+      currentJson = msg.json;
+      currentName = msg.nodeName;
+
+      // Syntax-highlight the JSON in the contenteditable div
+      outputEl.textContent = msg.json;
+
+      copyBtn.disabled     = false;
+      downloadBtn.disabled = false;
+
+      setNodeTag(msg.nodeName, msg.nodeType);
+
+      const lineCount = msg.json.split("\n").length;
+      const sizeKb    = (new TextEncoder().encode(msg.json).byteLength / 1024).toFixed(1);
+      setStatus(`Exported ${lineCount.toLocaleString()} lines · ${sizeKb} KB`, "ok");
+    }
+  };
+</script>
+</body>
+</html>
