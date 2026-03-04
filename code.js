@@ -155,6 +155,10 @@ function serializeNode(node) {
   if ("y" in node) result.y = node.y;
   if ("width" in node) result.width = node.width;
   if ("height" in node) result.height = node.height;
+  if ("maxWidth" in node && node.maxWidth !== null) result.maxWidth = node.maxWidth;
+  if ("maxHeight" in node && node.maxHeight !== null) result.maxHeight = node.maxHeight;
+  if ("minWidth" in node && node.minWidth !== null) result.minWidth = node.minWidth;
+  if ("minHeight" in node && node.minHeight !== null) result.minHeight = node.minHeight;
   if ("rotation" in node) result.rotation = node.rotation;
   if ("absoluteBoundingBox" in node) result.absoluteBoundingBox = node.absoluteBoundingBox;
 
