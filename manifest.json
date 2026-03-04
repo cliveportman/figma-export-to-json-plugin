@@ -1,9 +1,10 @@
 {
   "name": "Export to JSON",
-  "id": "export-component-frame-to-json",
+  "id": "1610950105114203633",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "editorType": ["figma"],
-  "documentAccess": "dynamic-page"
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] }
 }
